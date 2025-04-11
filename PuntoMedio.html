@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Punto Medio de Pizzas -  Lopez Duarte Roberto </title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Corte de Pizzas</h1>
+  <p>Ingrese el número de rebanadas</p>
+  <input id="rebanadas" type="number" value="4" style="font-size: 20px; padding: 5px; width: 60px;">
+  <button id="btn" style="font-size: 20px; padding: 5px 20px; background-color: blue; color: white; border: none; border-radius: 10px; cursor: pointer;">
+    Calcular
+  </button>
+
+  <script>
+    let rbs = 4;
+
+    function setup() {
+      createCanvas(900, 600).parent(document.body);
+      textAlign(CENTER, CENTER);
+      textSize(20);
+      noLoop();
+      select('#btn').mousePressed(() => {
+        rbs = int(select('#rebanadas').value());
+        redraw();
+      });
+    }
+
+    function draw() {
+      background(255);
+      trazarPizza(width / 6 * 1, height / 2, 100, "pendiente", color(255, 165, 0));
+      trazarPizza(width / 6 * 3, height / 2, 100, "dda", color(128, 0, 0));
+      trazarPizza(width / 6 * 5, height / 2, 100, "bresenham", color(0, 0, 255));
+      fill(0);
+      noStroke();
+      textSize(18);
+      textStyle(BOLD);
+      text("Punto-pendiente", width / 6 * 1, height / 2 + 120);
+      text("DDA", width / 6 * 3, height / 2 + 120);
+      text("Bresenham", width / 6 * 5, height / 2 + 120);
+    }
+
+    function trazarPizza(cx, cy, r, tipo, col) {
+      noFill();
+      stroke(col);
+      circulo(cx, cy, r, col);
+      for (let i = 0; i < rbs; i++) {
+        let ang = (TWO_PI / rbs) * i;
+        let px = round(cx + r * cos(ang));
+        let py = round(cy + r * sin(ang));
+        if (tipo === "pendiente") lineaPendiente(cx, cy, px, py, col);
+        if (tipo === "dda") lineaDDA(cx, cy, px, py, col);
+        if (tipo === "bresenham") lineaBresenham(cx, cy, px, py, col);
+      }
+    }
+
+    function circulo(cx, cy, r, col) {
+    stroke(col);
+    let x = 0;
+    let y = r;
+    let p = 1 - r;
+    while (x <= y) {
+        dibujarPunto(cx, cy, x, y);
+        x++;
+        if (p < 0) {
+        p += 2 * x + 1;
+        } else {
+        y--;
+        p += 2 * (x - y) + 1;
+        }
+    }
+    }
+
+    function dibujarPunto(cx, cy, x, y) {
+    point(cx + x, cy + y);
+    point(cx - x, cy + y);
+    point(cx + x, cy - y);
+    point(cx - x, cy - y);
+    point(cx + y, cy + x);
+    point(cx - y, cy + x);
+    point(cx + y, cy - x);
+    point(cx - y, cy - x);
+    }
+
+    function lineaPendiente(x1, y1, x2, y2, col) {
+      stroke(col);
+      x1 = round(x1); y1 = round(y1);
+      x2 = round(x2); y2 = round(y2);
+      if (x1 === x2) {
+        for (let y = min(y1, y2); y <= max(y1, y2); y++) point(x1, y);
+        return;
+      }
+      let m = (y2 - y1) / (x2 - x1);
+      let b = y1 - m * x1;
+      let paso = x1 < x2 ? 1 : -1;
+      for (let x = x1; x !== x2 + paso; x += paso) {
+        let y = m * x + b;
+        point(round(x), round(y));
+      }
+    }
+
+    function lineaDDA(x1, y1, x2, y2, col) {
+      stroke(col);
+      let dx = x2 - x1;
+      let dy = y2 - y1;
+      let pasos = max(abs(dx), abs(dy));
+      let incX = dx / pasos;
+      let incY = dy / pasos;
+      let x = x1;
+      let y = y1;
+      for (let i = 0; i <= pasos; i++) {
+        point(round(x), round(y));
+        x += incX;
+        y += incY;
+      }
+    }
+
+    function lineaBresenham(x1, y1, x2, y2, col) {
+      stroke(col);
+      x1 = round(x1); y1 = round(y1);
+      x2 = round(x2); y2 = round(y2);
+      let dx = abs(x2 - x1);
+      let dy = abs(y2 - y1);
+      let sx = x1 < x2 ? 1 : -1;
+      let sy = y1 < y2 ? 1 : -1;
+      let err = dx - dy;
+      while (true) {
+        point(x1, y1);
+        if (x1 === x2 && y1 === y2) break;
+        let e2 = 2 * err;
+        if (e2 > -dy) { err -= dy; x1 += sx; }
+        if (e2 < dx) { err += dx; y1 += sy; }
+      }
+    }
+  </script>
+</body>
+</html>
